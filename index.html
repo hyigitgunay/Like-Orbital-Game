@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shift Orbit — İskelet</title>
+  <title>Like-Orbital-Game</title>
   <style>
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -78,13 +78,25 @@
       var oyuncuCarpismaYaricap = (oyuncuBoyutu * Math.SQRT2) * 0.5;
 
       var engeller = [];
+      var bonuslar = [];
       var oyunBitti = false;
+
+      var MAKS_CAN = 3;
+      var can = MAKS_CAN;
+      var HASAR_KORUMA_MS = 900;
+      var hasarKorumaBitis = 0;
 
       var oyunSuruyorMu = false;
 
       var sonDogumZamani = 0;
       var dogumAraligiMs = TEMEL_DOGUM_MS;
       var engelYaricap = 8;
+
+      var bonusDogumAraligiMs = 6200;
+      var sonBonusZamani = 0;
+      var bonusYaricap = 10;
+      var bonusSkor = 0;
+      var BONUS_PUANI = 5;
 
       var oyunBaslangicZamani = 0;
       var oyunSonuSkoru = 0;
@@ -159,6 +171,7 @@
         var kademe = Math.floor(gecenSn / 15);
         donusHizi = TEMEL_DONUS_HIZI + kademe * 0.0012;
         dogumAraligiMs = Math.max(1400, TEMEL_DOGUM_MS - kademe * 80);
+        bonusDogumAraligiMs = Math.max(3600, 6200 - kademe * 90);
       }
 
       function belkiYeniEngelUret() {
@@ -177,22 +190,67 @@
         });
       }
 
+      function belkiYeniBonusUret() {
+        var simdi = performance.now();
+        if (bonuslar.length >= 2) {
+          return;
+        }
+        if (simdi - sonBonusZamani < bonusDogumAraligiMs) {
+          return;
+        }
+        sonBonusZamani = simdi;
+        var icMi = Math.random() < 0.5;
+        bonuslar.push({
+          yorungeYaricap: icMi ? icYorungeYaricap : disYorungeYaricap,
+          aci: Math.random() * Math.PI * 2,
+          aciHizi: -donusHizi * 0.55,
+          renk: '#ffd54f',
+          yaricap: bonusYaricap,
+          deger: BONUS_PUANI
+        });
+      }
+
       function dairelerCarpisiyorMu(x1, y1, r1, x2, y2, r2) {
         var mesafe = Math.hypot(x2 - x1, y2 - y1);
         return mesafe < r1 + r2;
       }
 
       function carpismalariDenetle(oyuncuX, oyuncuY) {
+        var simdi = performance.now();
+        if (simdi < hasarKorumaBitis) {
+          return;
+        }
+
         var i;
-        for (i = 0; i < engeller.length; i++) {
+        for (i = engeller.length - 1; i >= 0; i--) {
           var e = engeller[i];
           var ex = merkezX + Math.cos(e.aci) * e.yorungeYaricap;
           var ey = merkezY + Math.sin(e.aci) * e.yorungeYaricap;
           if (dairelerCarpisiyorMu(oyuncuX, oyuncuY, oyuncuCarpismaYaricap, ex, ey, e.yaricap)) {
-            oyunBitti = true;
-            oyunSonuSkoru = Math.floor((performance.now() - oyunBaslangicZamani) / 1000);
+            can -= 1;
+            hasarKorumaBitis = simdi + HASAR_KORUMA_MS;
+            engeller.splice(i, 1);
             yanmaSesiCal();
+
+            if (can <= 0) {
+              oyunBitti = true;
+              oyunSonuSkoru = Math.floor((performance.now() - oyunBaslangicZamani) / 1000) + bonusSkor;
+            }
             return;
+          }
+        }
+      }
+
+      function bonuslariDenetle(oyuncuX, oyuncuY) {
+        var i;
+        for (i = bonuslar.length - 1; i >= 0; i--) {
+          var b = bonuslar[i];
+          var bx = merkezX + Math.cos(b.aci) * b.yorungeYaricap;
+          var by = merkezY + Math.sin(b.aci) * b.yorungeYaricap;
+          if (dairelerCarpisiyorMu(oyuncuX, oyuncuY, oyuncuCarpismaYaricap, bx, by, b.yaricap)) {
+            bonusSkor += b.deger;
+            bonuslar.splice(i, 1);
+            yorungeSesiCal();
           }
         }
       }
@@ -219,11 +277,19 @@
           engeller[k].aci += engeller[k].aciHizi;
         }
 
+        var j;
+        for (j = 0; j < bonuslar.length; j++) {
+          bonuslar[j].aciHizi = -donusHizi * 0.55;
+          bonuslar[j].aci += bonuslar[j].aciHizi;
+        }
+
         belkiYeniEngelUret();
+        belkiYeniBonusUret();
 
         var oyuncuX = merkezX + Math.cos(aci) * gecerliYaricap;
         var oyuncuY = merkezY + Math.sin(aci) * gecerliYaricap;
         carpismalariDenetle(oyuncuX, oyuncuY);
+        bonuslariDenetle(oyuncuX, oyuncuY);
       }
 
       function yorungeRehberleriniCiz() {
@@ -250,20 +316,52 @@
         }
       }
 
+      function bonuslariCiz() {
+        var i;
+        for (i = 0; i < bonuslar.length; i++) {
+          var b = bonuslar[i];
+          var bx = merkezX + Math.cos(b.aci) * b.yorungeYaricap;
+          var by = merkezY + Math.sin(b.aci) * b.yorungeYaricap;
+
+          baglam.fillStyle = b.renk;
+          baglam.beginPath();
+          baglam.arc(bx, by, b.yaricap, 0, Math.PI * 2);
+          baglam.fill();
+
+          baglam.fillStyle = '#3b2d00';
+          baglam.font = 'bold 12px system-ui, "Segoe UI", sans-serif';
+          baglam.textAlign = 'center';
+          baglam.textBaseline = 'middle';
+          baglam.fillText('+', bx, by - 1);
+        }
+      }
+
       function skoruCiz() {
-        var skorSaniye;
+        var skor;
         if (!oyunSuruyorMu) {
-          skorSaniye = 0;
+          skor = 0;
         } else if (oyunBitti) {
-          skorSaniye = oyunSonuSkoru;
+          skor = oyunSonuSkoru;
         } else {
-          skorSaniye = Math.floor((performance.now() - oyunBaslangicZamani) / 1000);
+          skor = Math.floor((performance.now() - oyunBaslangicZamani) / 1000) + bonusSkor;
         }
         baglam.font = '600 22px system-ui, "Segoe UI", sans-serif';
         baglam.textAlign = 'right';
         baglam.textBaseline = 'top';
         baglam.fillStyle = '#ffffff';
-        baglam.fillText('Skor: ' + skorSaniye, tuval.width - 20, 18);
+        baglam.fillText('Skor: ' + skor, tuval.width - 20, 18);
+
+        baglam.font = '500 14px system-ui, "Segoe UI", sans-serif';
+        baglam.fillStyle = 'rgba(255, 255, 255, 0.72)';
+        baglam.fillText('Bonus: +' + bonusSkor, tuval.width - 20, 48);
+      }
+
+      function canlariCiz() {
+        baglam.font = '600 22px system-ui, "Segoe UI", sans-serif';
+        baglam.textAlign = 'left';
+        baglam.textBaseline = 'top';
+        baglam.fillStyle = '#ffffff';
+        baglam.fillText('Can: ' + can + '/' + MAKS_CAN, 20, 18);
       }
 
       function baslatEkraniniCiz() {
@@ -281,7 +379,7 @@
 
         baglam.font = '16px system-ui, "Segoe UI", sans-serif';
         baglam.fillStyle = 'rgba(255, 255, 255, 0.75)';
-        baglam.fillText('Space: yörünge değiştir · Başlamak için tıkla', merkezX, merkezY - 28);
+        baglam.fillText('Space: yörünge değiştir · Sarı bonusları topla · 3 canın var', merkezX, merkezY - 28);
 
         var b = baslatDugmesi;
         b.x = merkezX - b.genislik * 0.5;
@@ -316,7 +414,11 @@
         baglam.textAlign = 'center';
         baglam.textBaseline = 'middle';
         baglam.fillStyle = '#ff5252';
-        baglam.fillText('OYUN BİTTİ', merkezX, merkezY - 55);
+        baglam.fillText('OYUN BİTTİ', merkezX, merkezY - 70);
+
+        baglam.font = '600 22px system-ui, "Segoe UI", sans-serif';
+        baglam.fillStyle = '#ffffff';
+        baglam.fillText('Final Skor: ' + oyunSonuSkoru, merkezX, merkezY - 25);
 
         var d = yenidenDeneDugmesi;
         d.x = merkezX - d.genislik * 0.5;
@@ -343,12 +445,17 @@
       function oyunuSifirla() {
         oyunBitti = false;
         engeller = [];
+        bonuslar = [];
+        can = MAKS_CAN;
+        hasarKorumaBitis = 0;
+        bonusSkor = 0;
         aci = 0;
         gecerliYaricap = icYorungeYaricap;
         hedefYaricap = icYorungeYaricap;
         donusHizi = TEMEL_DONUS_HIZI;
         dogumAraligiMs = TEMEL_DOGUM_MS;
         sonDogumZamani = performance.now();
+        sonBonusZamani = performance.now();
         oyunBaslangicZamani = performance.now();
         oyunSonuSkoru = 0;
         yildizlariYenidenOlustur();
@@ -365,10 +472,7 @@
         };
       }
 
-      /**
-       * Oyun bitti ekranında “Yeniden Dene” üzerindeyken el imleci (pointer).
-       * Açılışta “Başlat” üzerinde de aynı mantık — tutarlı UX.
-       */
+
       function fareImleciniGuncelle(olay) {
         var p = tuvalFareKonumu(olay);
         if (!oyunSuruyorMu) {
@@ -411,12 +515,13 @@
 
         if (oyunSuruyorMu) {
           engelleriCiz();
+          bonuslariCiz();
         }
 
         var oyuncuX = merkezX + Math.cos(aci) * gecerliYaricap;
         var oyuncuY = merkezY + Math.sin(aci) * gecerliYaricap;
 
-        baglam.fillStyle = '#ffffff';
+        baglam.fillStyle = performance.now() < hasarKorumaBitis ? 'rgba(255, 255, 255, 0.45)' : '#ffffff';
         baglam.fillRect(
           oyuncuX - oyuncuBoyutu * 0.5,
           oyuncuY - oyuncuBoyutu * 0.5,
@@ -425,6 +530,7 @@
         );
 
         skoruCiz();
+        canlariCiz();
         baslatEkraniniCiz();
         oyunBittiEkraniniCiz();
 
@@ -467,9 +573,7 @@
             p.y <= b.y + b.yukseklik
           ) {
             sesleriKullaniciEtkilesimiyleBaslat();
-            oyunSuruyorMu = true;
-            oyunBaslangicZamani = performance.now();
-            sonDogumZamani = performance.now();
+            oyunuSifirla();
           }
           return;
         }
