@@ -26,7 +26,9 @@ Bu proje, yörünge ve engellerden kaçınma fikrini aşağıdaki oyundan **esin
 | **Space** (bırak) | İç yörüngeye dön. |
 | **Yeniden Dene** (tık) | Oyun bittikten sonra yeniden başlat. |
 
-**Amaç:** Kırmızı engellere çarpmadan mümkün olduğunca uzun süre hayatta kal; skor = saniye. Zaman ilerledikçe oyun hafifçe zorlaşır.
+**Amaç:**  Zaman ilerledikçe oyun hafifçe zorlaşır.Oyuncunun başlangıçta 3 canı vardır. Kırmızı engellere çarpıldığında bir can kaybedilir. Can sıfıra düştüğünde oyun biter.
+
+Oyun sırasında sarı bonus objeleri oluşur. Oyuncu bu bonusları topladığında skoruna ek puan kazanır.
 
 ---
 
