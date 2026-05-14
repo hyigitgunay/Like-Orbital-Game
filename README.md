@@ -5,6 +5,7 @@ Yorungede Gezmece #
 **Canlı oyun (GitHub Pages): 
 https://hyigitgunay.github.io/Like-Orbital-Game/
 
+
 ---
 
 ## Orijinal oyun / esinlenme
@@ -13,11 +14,9 @@ Bu proje, yörünge ve engellerden kaçınma fikrini aşağıdaki oyundan **esin
 
 - **Referans oyun:** [Orbital v2.3.2](https://jamiemcclenaghan.itch.io/orbital) — Jamie McClenaghan (itch.io)
 
-
-
 ---
 
-## Nasıl oynanır
+## Nasıl oynanir
 
 | Girdi | İşlev |
 |--------|--------|
@@ -29,6 +28,7 @@ Bu proje, yörünge ve engellerden kaçınma fikrini aşağıdaki oyundan **esin
 **Amaç:**  Zaman ilerledikçe oyun hafifçe zorlaşır.Oyuncunun başlangıçta 3 canı vardır. Kırmızı engellere çarpıldığında bir can kaybedilir. Can sıfıra düştüğünde oyun biter.
 
 Oyun sırasında sarı bonus objeleri oluşur. Oyuncu bu bonusları topladığında skoruna ek puan kazanır.
+
 
 ---
 
@@ -44,6 +44,7 @@ Oyun sırasında sarı bonus objeleri oluşur. Oyuncu bu bonusları topladığı
 ---
 
 ## Ekran görüntüleri
+
 
 ![Oyun içi — yörüngede kaçınma ve skor](gorseller/oynanis.png)
 
